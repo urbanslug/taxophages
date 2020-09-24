@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # set vars
-export SEQUENCES=data/relabeledSeqs.sorted_by_quality_and_len.fasta
-export ODGI_GRAPH=data/relabeledSeqs.sorted_by_quality_and_len.g6.unchop.sorted.odgi
-export OUTPUT_EDGYEET_FASTA=output/first_sequence_edgyeet.gaf
+SEQUENCES=data/relabeledSeqs.sorted_by_quality_and_len.fasta
+ODGI_GRAPH=data/relabeledSeqs.sorted_by_quality_and_len.g6.unchop.sorted.odgi
+OUTPUT_EDGYEET_FASTA=output/first_sequence_edgyeet.gaf
 
 # Build the index
 # Very fast index barely a second.
