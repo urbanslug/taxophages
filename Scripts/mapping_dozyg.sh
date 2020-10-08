@@ -12,4 +12,6 @@ dozyg index -i $INPUT_GRAPH -k 15 -e 3 -t 4
 
 # Map the first sequence to the graph
 echo "Mapping ${SEQUENCE} to ${INPUT_GRAPH}"
-dozyg map -i $INPUT_GRAPH -f $SEQUENCE > $OUTPUT_DOZYG
+dozyg map -g 1 -i $INPUT_GRAPH -f $SEQUENCE > $OUTPUT_DOZYG
+
+echo "Output ${OUTPUT_DOZYG}"
