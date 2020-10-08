@@ -6,7 +6,6 @@ suppressPackageStartupMessages(
     require(rsvd)
     require(ape)
     require(ggtree)
-    require(ggplot2)
   })
 
 
