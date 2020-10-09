@@ -1,5 +1,29 @@
 #!/usr/bin/env Rscript
 
+
+# Install deps in ~/RLibraries  ----
+custom.lib.path <-"~/RLibraries"
+# use insecure mirror
+mirror <- "http://mirrors.nics.utk.edu/cran/"
+.libPaths( c( custom.lib.path, .libPaths() ) )
+
+list.of.packages <- c("rsvd", "ape", "ggplot2",
+                      # ggtree deps
+                      "aplot", "dplyr", "purrr", "rvcheck",
+                      "tidyr", "tidytree", "jsonlite" )
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages,
+                                          lib = custom.lib.path,
+                                          repos = mirror)
+
+mirror.bioc <- "http://bioconductor.org/packages/3.11/bioc/"
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager", lib = custom.lib.path, repos = mirror)
+
+BiocManager::install("ggtree",
+                     lib = custom.lib.path,
+                     site_repository = mirror.bioc)
+
 # Imports ----
 suppressPackageStartupMessages(
   {
@@ -9,7 +33,7 @@ suppressPackageStartupMessages(
     require(ggplot2)
   })
 
-
+# Command line arguments ----
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args) < 2) {
@@ -28,12 +52,8 @@ if ( length(args) > 2 ) {
   dimensions <- as.integer(args[3])
 }
 
-#setwd("~/src/Work/UT/taxophages/")
 
-# matrix.tsv <- "./Data/DRB1-3123_matrix.tsv"
-# figure <- "./Figures/Tree.png"
-
-
+# Fetch data ----
 message("Reading data")
 # read the data into a dataframe
 data.df <- read.delim(matrix.tsv)
@@ -59,6 +79,7 @@ coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
 coverage.tree$tip.label = data.df$path.name
 
+# Visualization ----
 message("Creating tree")
 p <- ggtree(coverage.tree)
 p +
