@@ -25,42 +25,30 @@ if (length(args) < 2) {
 
 matrix.tsv <- args[1]
 figure <- args[2]
-dimensions <- 2
+sample_size <- 100
 
 if ( length(args) > 2 ) {
-  dimensions <- as.integer(args[3])
+  sample_size <- as.integer(args[3])
 }
 
 
 # Fetch data ----
-message("Reading data")
+message(sprintf("Reading %s", matrix.tsv))
 # read the data into a dataframe
 data.df <- read.delim(matrix.tsv)
-
 message(sprintf("Successfully read %s", matrix.tsv))
 
 # isolate only the coverage data
 coverage.df <- data.df[, 4:ncol(data.df)]
+sampled.df <- data.df[sample(nrow(data.df), sample_size), ]
 
 # convert the coverage data into a matrix
-coverage.matrix <- as.matrix(coverage.df)
+coverage.matrix <- as.matrix(sampled.df)
 
-# transpose the matrix
-coverage.matrix.t <- t(coverage.matrix)
-
-# run rSVD
-message(sprintf("Approximating coverge matrix down to %s dimensions", dimensions))
-coverage.rsvd <- rsvd(coverage.matrix.t, k=dimensions)
-coverage.rsvd.v <- coverage.rsvd$v
-coverage.rsvd.v.df <- data.frame(coverage.rsvd.v)
-
-recuded.matrix.path <- "./reduced.csv"
-message(sprintf("Saving reduced matrix to %s", recuded.matrix.path))
-write.csv(coverage.rsvd.v, recuded.matrix.path, row.names = TRUE)
-
-coverage.dist <- dist(coverage.rsvd.v.df)
+message("Calculating pairwise distances")
+coverage.dist <- dist(coverage.matrix)
 coverage.tree <- nj(coverage.dist)
-coverage.tree$tip.label = data.df$path.name
+
 
 
 # newick.tree.path <- "./svd_tree.nwk"
@@ -68,16 +56,15 @@ coverage.tree$tip.label = data.df$path.name
 # write.tree(coverage.tree, newick.tree.path)
 
 # Visualization ----
-message("Creating tree")
+message(sprintf("Generating tree: %s", figure))
 p <- ggtree(coverage.tree)
 p +
   geom_tiplab(size=4) +
-  geom_tippoint(size=2, aes(color=label)) +
-  labs(title = "SVD Tree", color="Samples") +
-  theme_tree(legend.position='right')
+  geom_tippoint(size=2) +
+  labs(title = "Direct Neighbour Joining from Eucledian Distance") +
 
 ggsave(paste(figure, sep=""),
-       height=10,
+       height=500,
        width=22,
        dpi=300)
 dev.off()
