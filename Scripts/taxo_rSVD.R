@@ -1,28 +1,7 @@
 #!/usr/bin/env Rscript
 
-
-# Install deps in ~/RLibraries  ----
 custom.lib.path <-"~/RLibraries"
-# use insecure mirror
-mirror <- "http://mirrors.nics.utk.edu/cran/"
-.libPaths( c( custom.lib.path, .libPaths() ) )
-
-list.of.packages <- c("rsvd", "ape", "ggplot2",
-                      # ggtree deps
-                      "aplot", "dplyr", "purrr", "rvcheck",
-                      "tidyr", "tidytree", "jsonlite" )
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages,
-                                          lib = custom.lib.path,
-                                          repos = mirror)
-
-mirror.bioc <- "http://bioconductor.org/packages/3.11/bioc/"
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager", lib = custom.lib.path, repos = mirror)
-
-BiocManager::install("ggtree",
-                     lib = custom.lib.path,
-                     site_repository = mirror.bioc)
+.libPaths( c( custom.lib.path, .libPaths()) )
 
 # Imports ----
 suppressPackageStartupMessages(
@@ -58,7 +37,7 @@ message("Reading data")
 # read the data into a dataframe
 data.df <- read.delim(matrix.tsv)
 
-message("Successfully read data")
+message(sprintf("Successfully read %s", matrix.tsv))
 
 # isolate only the coverage data
 coverage.df <- data.df[, 4:ncol(data.df)]
@@ -74,10 +53,19 @@ message(sprintf("Approximating coverge matrix down to %s dimensions", dimensions
 coverage.rsvd <- rsvd(coverage.matrix.t, k=dimensions)
 coverage.rsvd.v <- coverage.rsvd$v
 
+recuded.matrix.path <-  "./reduced.csv"
+message(sprintf("Saving reduced matrix to %s", recuded.matrix.path))
+write.csv(coverage.rsvd.v, recuded.matrix.path, row.names = TRUE)
+
 coverage.rsvd.v.df <- data.frame(coverage.rsvd.v)
 coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
 coverage.tree$tip.label = data.df$path.name
+
+
+newick.tree.path <- "./svd_tree.nwk"
+message(sprintf("Saving newick tree to %s", newick.tree.path))
+write.tree(coverage.tree, newick.tree.path)
 
 # Visualization ----
 message("Creating tree")
