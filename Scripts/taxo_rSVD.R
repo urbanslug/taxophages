@@ -25,19 +25,19 @@ if (length(args) < 2) {
 
 matrix.tsv <- args[1]
 figure <- args[2]
-dimensions <- 2
+recuded.matrix.path <- args[3]
+dimensions <- 100
 
-if ( length(args) > 2 ) {
-  dimensions <- as.integer(args[3])
+if ( length(args) > 3 ) {
+  dimensions <- as.integer(args[4])
 }
 
 
 # Fetch data ----
-message("Reading data")
+message(sprintf("Reading matrix %s", matrix.tsv))
 # read the data into a dataframe
-data.df <- read.delim(matrix.tsv)
-
-message(sprintf("Successfully read %s", matrix.tsv))
+data.df <- read.delim(matrix.tsv, sep=",")
+message("Successfully read matrix")
 
 # isolate only the coverage data
 coverage.df <- data.df[, 4:ncol(data.df)]
@@ -54,32 +54,20 @@ coverage.rsvd <- rsvd(coverage.matrix.t, k=dimensions)
 coverage.rsvd.v <- coverage.rsvd$v
 coverage.rsvd.v.df <- data.frame(coverage.rsvd.v)
 
-recuded.matrix.path <- "./reduced.csv"
-message(sprintf("Saving reduced matrix to %s", recuded.matrix.path))
-write.csv(coverage.rsvd.v, recuded.matrix.path, row.names = TRUE)
+
+# message(sprintf("Saving reduced matrix to %s", recuded.matrix.path))
+#write.csv(coverage.rsvd.v.df, recuded.matrix.path, row.names = TRUE)
 
 coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
-coverage.tree$tip.label = data.df$path.name
-
-
-# newick.tree.path <- "./svd_tree.nwk"
-# message(sprintf("Saving newick tree to %s", newick.tree.path))
-# write.tree(coverage.tree, newick.tree.path)
+coverage.tree$tip.label = data.df$X
 
 # Visualization ----
-message("Creating tree")
-p <- ggtree(coverage.tree)
-p +
-  geom_tiplab(size=4) +
-  geom_tippoint(size=2, aes(color=label)) +
-  labs(title = "SVD Tree", color="Samples") +
-  theme_tree(legend.position='right')
-
-ggsave(paste(figure, sep=""),
-       height=10,
-       width=22,
-       dpi=300)
+sample.size <- nrow(data.df)
+title <- sprintf("rSVD Tree for %s samples", sample.size)
+message(sprintf("Generating rSVD tree: %s", figure))
+ggtree(coverage.tree) + geom_tiplab(size=3) + labs(title=title)
+ggsave(figure, height=50, width=42, dpi=300, limitsize = FALSE)
 dev.off()
 
 message("Done")
