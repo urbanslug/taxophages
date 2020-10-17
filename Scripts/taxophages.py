@@ -52,6 +52,8 @@ def read_txt(file_path):
     f.close()
     return lines
 
+def fast_csv():
+    pass
 
 # Functionality
 # -------------
@@ -208,6 +210,48 @@ def get_country(location):
             return None
 
 
+def get_metadata(hashes):
+    entries = []
+    for sequence_hash in hashes:
+        unknown = "unknwon"
+        metadata = query_arvados(sequence_hash)
+
+        if metadata == None:
+            #entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
+            entries.append([sequence_hash, unknown, unknown])
+            continue
+
+        location, date = [metadata[item] for item in ('location', 'date')]
+        country = get_country(location)
+
+        if country == None:
+            country = unknwon
+
+        #entries.append({'sample': sequence_hash, 'date': date, 'country': country})
+        entries.append([sequence_hash, date, country])
+
+    return entries
+
+def prepend_metadata(set1, set2):
+    """prepend set1 into set2 both should be tuples"""
+
+    combined_field_names = set1.get("field_names") + set2.get("field_names")
+
+    set1_data = set1.get("data")
+    set2_data = set2.get("data")
+
+    set1_len = len(set1_data)
+    set2_len = len(set2_data)
+    if set1_len != set2_len :
+        click.echo("Warning: sizes not equal. Will use shortest.")
+
+    combined_entries = []
+    for i in range(0, min(set1_len, set2_len)):
+        combined_entries.append(set1_data[i] + set2_data[i])
+
+    return {"field_names": combined_field_names, "data": combined_entries}
+
+
 def loop_hashes(input_csv, csv_with_metadata):
     field_of_interest = "path.name"
 
@@ -227,26 +271,22 @@ def loop_hashes(input_csv, csv_with_metadata):
         hashes.append(substring.strip())
 
     click.echo("Fetching metadata.")
-    entries = []
+    entries = get_metadata(hashes)
+
+    click.echo("Prepending metadata")
     fieldnames = ['sample', 'date', 'country']
-    for sequence_hash in hashes:
-        unknown = "unknwon"
-        metadata = query_arvados(sequence_hash)
+    combined = prepend_metadata({"field_names": fieldnames, "data": entries}, {"field_names": field_names, "data": data})
 
-        if metadata == None:
-            entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
-            continue
+    click.echo("Preparing csv")
+    
+    f = combined.get("field_names")
+    fd = ["\t".join(f)]
+    d = combined.get("data")
+    dp =  list(map(lambda x:("\t".join(x)), d))
+    combined_data = fd + dp
 
-        location, date = [metadata[item] for item in ('location', 'date')]
-        country = get_country(location)
-
-        if country == None:
-            country = unknwon
-
-        entries.append({'sample': sequence_hash, 'date': date, 'country': country})
-
-    click.echo("Writing to %s" % csv_with_metadata)
-    write_document(csv_with_metadata, fieldnames, entries)
+    click.echo("Writing combined csv to %s" % csv_with_metadata)
+    write_txt(combined_data, csv_with_metadata, insert_newlines=True)
 
 
 # CLI stuff
@@ -299,7 +339,7 @@ def sample(size, csv, sampled_csv):
 @cli.command()
 @click.argument('csv')
 @click.argument('updated_csv')
-def get_metadata(csv, updated_csv):
+def metadata(csv, updated_csv):
     """Specific to the COVID dataset. Fetch metadata using sequence ids"""
     click.echo("Using path.name field in %s to write %s" % (csv, updated_csv))
     loop_hashes(csv, updated_csv)
