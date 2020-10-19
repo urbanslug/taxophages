@@ -326,7 +326,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 def cli():
-    """Taxophages: coverage matrices analysis and phylogenies"""
+    """
+    Taxophages: coverage matrix analysis and phylogenetics
+    """
     pass
 
 @cli.command()
@@ -363,7 +365,9 @@ def filter(csv, filtered_csv,  txt):
 @click.argument('csv')
 @click.argument('sampled_csv')
 def sample(size, csv, sampled_csv):
-    """Number of random samples to take from a coverage matrix"""
+    """
+    Take a random sample from a coverage matrix.
+    """
     click.echo('Taking %s samples from %s into %s' % (size, csv, sampled_csv))
     size = int(size)
     sample_matrix(size, csv, sampled_csv)
@@ -383,28 +387,30 @@ def metadata(csv, updated_csv):
 @click.option('--name', help='Name of the field')
 @click.argument('txt')
 def extract_field(csv, name, txt):
-    """Pull out a single field into a txt file"""
+    """Pull out a single field into a txt file."""
     click.echo("Extracting field %s into %s" % (name, txt))
     isolate_fields(csv, name.strip(), txt)
 
 @cli.command()
 @click.argument('csv')
 @click.argument('reduced_csv')
-# @click.option('--svd', default=True, help='Whether to perform svd or not. Default True.')
 @click.option('--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
 def rsvd(csv, reduced_csv, dimensions):
-    """Call rsvd script to..."""
-    click.echo("Genrating cladogram from coverage matrix %s" % csv)
+    """Perform rsvd on a coverage matrix."""
+    click.echo("Performing rsvd on: %s" % csv)
     dimensions = int(dimensions)
     taxo_rsvd(csv, reduced_csv, dimensions)
     click.echo("Done")
 
+# should incorporate direct
 @cli.command()
 @click.argument('csv')
 @click.argument('pdf')
 def cladogram(csv, pdf):
-    """Generate a cladogram. Not yet implemented."""
-    click.echo("Genrating cladogram from coverage matrix %s" % csv)
+    """
+    Compute pairwise distances and generate a cladogram.
+    """
+    click.echo("Genrating cladogram from coverage matrix: %s" % csv)
     taxo_cladogram(csv, pdf)
     click.echo("Done")
 
@@ -413,13 +419,15 @@ def cladogram(csv, pdf):
 @click.argument('reduced_csv')
 @click.argument('pdf')
 @click.option('--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
-def rsvd_clado(csv, reduced_csv, dimensions, pdf):
-    """Generate a cladogram. Not yet implemented."""
+def clado_rsvd(csv, reduced_csv, dimensions, pdf):
+    """
+    Combines cladogram and rsvd.
+    Generate cladogram from rsvd reduced distance matrix.
+    """
     click.echo("Performing rsvd and generating a coverage vector")
     dimensions = int(dimensions)
     taxo_all(csv, reduced_csv, dimensions, pdf)
     click.echo("Done")
-
 
 @cli.command()
 @click.option('--count', default=1, help='number of repeats')
