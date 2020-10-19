@@ -332,7 +332,7 @@ def cli():
     pass
 
 @cli.command()
-@click.option('--threshold', default=0.1, help='The maximum percentage of Ns. Default 0.1')
+@click.option('-t', '--threshold', default=0.1, help='The maximum percentage of Ns. Default 0.1')
 @click.argument('csv')
 @click.argument('txt')
 def qc(csv, txt, threshold):
@@ -361,7 +361,7 @@ def filter(csv, filtered_csv,  txt):
 
 
 @cli.command()
-@click.option('--size', default=100, help='Sample size. Default 100.')
+@click.option('-s', '--size', default=100, help='Sample size. Default 100.')
 @click.argument('csv')
 @click.argument('sampled_csv')
 def sample(size, csv, sampled_csv):
@@ -384,7 +384,7 @@ def metadata(csv, updated_csv):
 
 @cli.command()
 @click.argument('csv')
-@click.option('--name', help='Name of the field')
+@click.option('-n', '--name', help='Name of the field')
 @click.argument('txt')
 def extract_field(csv, name, txt):
     """Pull out a single field into a txt file."""
@@ -394,7 +394,7 @@ def extract_field(csv, name, txt):
 @cli.command()
 @click.argument('csv')
 @click.argument('reduced_csv')
-@click.option('--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
+@click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
 def rsvd(csv, reduced_csv, dimensions):
     """Perform rsvd on a coverage matrix."""
     click.echo("Performing rsvd on: %s" % csv)
@@ -418,7 +418,8 @@ def cladogram(csv, pdf):
 @click.argument('csv')
 @click.argument('reduced_csv')
 @click.argument('pdf')
-@click.option('--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
+@click.option('-c', '--color', help='Field in the dataset to use to color the cladogram.')
+@click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
 def clado_rsvd(csv, reduced_csv, dimensions, pdf):
     """
     Combines cladogram and rsvd.
