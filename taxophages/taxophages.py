@@ -8,7 +8,6 @@ import json
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 import sys
-
 import subprocess
 
 # Utils
@@ -200,10 +199,10 @@ def get_country(location):
     query = """
     SELECT ?name WHERE {
       wd:%s wdt:P17 ?entity .
-      ?entity wdt:P1448 ?name
-    }
-    LIMIT 1
-    """ % (location)
+      ?entity rdfs:label ?name .
+      FILTER (langMatches( lang(?name), "EN" ) )
+    } LIMIT 1
+    """  % (location)
 
     results = get_results(query)
     for result in results["results"]["bindings"]:
@@ -289,7 +288,7 @@ def loop_hashes(input_csv, csv_with_metadata):
     dp =  list(map(lambda x:("\t".join(x)), d))
     combined_data = fd + dp
 
-    click.echo("Writing combined csv to %s" % csv_with_metadata)
+    click.echo("Writing updated csv to %s" % csv_with_metadata)
     write_txt(combined_data, csv_with_metadata, insert_newlines=True)
 
 def taxo_rsvd(csv_file_path, reduced_csv_file_path, dimensions):
@@ -368,7 +367,7 @@ def sample(size, csv, sampled_csv):
     """
     Take a random sample from a coverage matrix.
     """
-    click.echo('Taking %s samples from %s into %s' % (size, csv, sampled_csv))
+    click.echo('Taking %s random samples from %s into %s' % (size, csv, sampled_csv))
     size = int(size)
     sample_matrix(size, csv, sampled_csv)
 
@@ -418,9 +417,9 @@ def cladogram(csv, pdf):
 @click.argument('csv')
 @click.argument('reduced_csv')
 @click.argument('pdf')
-@click.option('-c', '--color', help='Field in the dataset to use to color the cladogram.')
+@click.option('-g', '--group-by', help='Field in the dataset to use to color the cladogram.')
 @click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
-def clado_rsvd(csv, reduced_csv, dimensions, pdf):
+def clado_rsvd(csv, group_by, reduced_csv, dimensions, pdf):
     """
     Combines cladogram and rsvd.
     Generate cladogram from rsvd reduced distance matrix.

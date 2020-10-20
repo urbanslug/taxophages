@@ -4,8 +4,7 @@ custom.lib.path <- "~/RLibraries"
 .libPaths( c( custom.lib.path, .libPaths()) )
 
 # Imports ----
-suppressPackageStartupMessages(
-  {
+suppressPackageStartupMessages({
     require(rsvd)
     require(ape)
     require(ggtree)
@@ -36,6 +35,12 @@ message("Successfully read matrix")
 
 # isolate only the coverage data
 coverage.df <- data.df[, 7:ncol(data.df)]
+metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:6])
+
+grouping.field <- "date"
+gf <- metadata.df[[grouping.field]]
+unique.countries <- unique(gf)
+unique.countries.count <- length(unique.countries)
 
 # convert the coverage data into a matrix
 coverage.matrix <- as.matrix(coverage.df)
@@ -57,12 +62,32 @@ coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
 
 # Visualization ----
-message(sprintf("Generating rSVD tree"))
+message("Generating rSVD tree")
 
 sample.size <- nrow(data.df)
-title <- sprintf("rSVD Tree for %s samples", sample.size)
-ggtree(coverage.tree) + geom_tiplab(size=3) + labs(title=title)
+plot.title <- sprintf("rSVD Tree for %s samples", sample.size)
+legend.title <- grouping.field
 
-message(sprintf("Saving rSVD tree to: %s", figure))
-ggsave(figure, height=10, width=20, dpi=150)
+
+myPalette <-c("#708090", "#0014a8", "#9f00ff", "#177245", "#f984ef", "#ffae42",
+              "#03c03c", "#915f6d", "#f7e98e", "#0070ff", "#663854", "#e8000d",
+              "#704214", "#00ced1", "#ffa07a", "#b5651d",  "#918151")
+colfunc <- colorRampPalette(myPalette)
+phage.colors <- c(colfunc(10),
+                  rainbow(unique.countries.count)[3:unique.countries.count])
+
+p <- ggtree(coverage.tree, size=0.1, aes(color=date)) %<+% metadata.df
+p +
+  geom_tippoint(size=0.1, aes(color=date), show.legend=FALSE) +
+  labs(title=plot.title) +
+  scale_colour_manual(
+    breaks=unique.countries,
+    na.translate=TRUE,
+    na.value="#cccccc",
+    name=legend.title,
+    values=phage.colors
+  )
+
+message(sprintf("Saving rSVD tree to %s", figure))
+ggsave(figure, units="cm", dpi=300, height=400, width=40, limitsize=FALSE)
 dev.off()

@@ -11,7 +11,7 @@ suppressPackageStartupMessages(
 
 setwd("src/Work/UT/taxophages")
 
-matrix.tsv <- "./Data/covid.qc.sample100.metadata.matrix.csv"
+matrix.tsv <- "./Data/covid.qc.sample100.2.metadata.matrix.csv"
 dimensions <- 10
 figure <-"./Figures/tree_with_countries.pdf"
 
@@ -19,10 +19,11 @@ figure <-"./Figures/tree_with_countries.pdf"
 # read the data into a dataframe
 data.df <- read.delim(matrix.tsv)
 
-
 # isolate only the coverage data
-metadata.df <- data.df[, 1:6]
 coverage.df <- data.df[, 7:ncol(data.df)]
+metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:6])
+unique.countries <- unique(metadata.df$country)
+
 
 # convert the coverage data into a matrix
 coverage.matrix <- as.matrix(coverage.df)
@@ -37,29 +38,27 @@ coverage.rsvd.v.df <- data.frame(coverage.rsvd.v)
 
 coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
-coverage.tree$tip.label <- metadata.df$country
-
-
 
 # Visualization ----
-sample.size <- nrow(data.df)
-title <- sprintf("rSVD Tree for %s samples", sample.size)
-
-
-
 myPalette <-c("#708090", "#0014a8", "#9f00ff", "#177245", "#f984ef", "#ffae42",
               "#03c03c", "#915f6d", "#f7e98e", "#0070ff", "#663854", "#e8000d",
               "#704214", "#00ced1", "#ffa07a", "#b5651d",  "#918151")
 
-p <- ggtree(coverage.tree) %<+% metadata.df
-p +
-  geom_tiplab(size=3, aes(color=label)) +
-  labs(title=title) +
-  scale_color_brewer("country", palette="Spectral")
+sample.size <- nrow(data.df)
+plot.title <- sprintf("rSVD Tree for %s samples", sample.size)
+legend.title <- "Country"
 
+p <- ggtree(coverage.tree, aes(color=country)) %<+% metadata.df
+p +
+  geom_tippoint(size=0.5, aes(color=country), show.legend=FALSE) +
+  labs(title=plot.title) +
+  scale_colour_manual(
+    breaks=unique.countries,
+    na.translate=TRUE,
+    na.value="#cccccc",
+    name=legend.title,
+    values=myPalette
+    )
 
 ggsave(figure, height=10, width=20, dpi=300)
 dev.off()
-
-
-
