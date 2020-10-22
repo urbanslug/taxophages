@@ -6,9 +6,13 @@ from random import randint
 import re
 import json
 import requests
+import urllib
 from SPARQLWrapper import SPARQLWrapper, JSON
 import sys
 import subprocess
+
+countries = []
+unknown = "unknown"
 
 # Utils
 # -----
@@ -197,41 +201,68 @@ def get_results(query):
 
 def get_country(location):
     query = """
-    SELECT ?name WHERE {
-      wd:%s wdt:P17 ?entity .
-      ?entity rdfs:label ?name .
-      FILTER (langMatches( lang(?name), "EN" ) )
+    SELECT DISTINCT ?countryName WHERE {
+      wd:%s wdt:P17 ?country .
+
+      # country
+      ?country rdfs:label ?countryName .
+      FILTER (langMatches( lang(?countryName),  "EN" ) )
     } LIMIT 1
     """  % (location)
 
-    results = get_results(query)
-    for result in results["results"]["bindings"]:
-        if result:
-            return(result["name"]["value"])
-        else:
-            return None
+    try:
+        results = get_results(query)
+        bindings = results["results"]["bindings"]
+        country = bindings[0]["countryName"]["value"]
+        region = lookup_region(country)
+
+        if region is None:
+            region = unknown
+
+        #print(f"{country} {region}")
+        return {"country": country, "region": region}
+    except urllib.error.HTTPError as exception:
+        print(exception)
+        print(location)
+        return None
+    except KeyError:
+        return None
+
+def lookup_region(country):
+    res = list(filter(lambda x: x[0] == country,  countries))
+    try:
+        return res[0][6]
+    except IndexError:
+        print(country)
+        return None
 
 
 def get_metadata(hashes):
-    """Get..."""
+    """
+    Get metadata associated with a given hash from Arvados then wikidata
+    """
+    # entries is a lists of lists containing sample, date, country, region
+    global countries
+    countries = read_document("./taxophages/countries.csv")
     entries = []
+
     for sequence_hash in hashes:
-        unknown = "unknwon"
+        unknown = "unknown"
         metadata = query_arvados(sequence_hash)
 
         if metadata == None:
             #entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
-            entries.append([sequence_hash, unknown, unknown])
+            entries.append([sequence_hash, unknown, unknown, unknown])
             continue
 
         location, date = [metadata[item] for item in ('location', 'date')]
-        country = get_country(location)
+        geo = get_country(location)
 
-        if country == None:
-            country = unknwon
-
-        #entries.append({'sample': sequence_hash, 'date': date, 'country': country})
-        entries.append([sequence_hash, date, country])
+        if geo == None:
+            entries.append([sequence_hash, date, unknown, unknown])
+        else:
+            country, region = [geo[item] for item in ('country', 'region')]
+            entries.append([sequence_hash, date, country, region])
 
     return entries
 
@@ -277,7 +308,7 @@ def loop_hashes(input_csv, csv_with_metadata):
     entries = get_metadata(hashes)
 
     click.echo("Prepending metadata")
-    fieldnames = ['sample', 'date', 'country']
+    fieldnames = ['sample', 'date', 'country', 'region']
     combined = prepend_metadata({"field_names": fieldnames, "data": entries}, {"field_names": field_names, "data": data})
 
     click.echo("Preparing csv")
@@ -311,10 +342,10 @@ def taxo_cladogram(csv_file_path, cladogram_file_path):
         f"./taxophages/taxo_cladogram.R {csv_file_path} {cladogram_file_path}",
         shell=True
     )
-def taxo_all(csv, reduced_csv, dimensions, pdf):
+def taxo_all(csv, reduced_csv, dimensions, pdf, layout, filter_unknown):
     click.echo("Calling taxo_all.R")
     subprocess.call (
-        f"./taxophages/taxo_all.R {csv} {reduced_csv} {pdf} {dimensions}",
+        f"./taxophages/taxo_all.R {csv} {reduced_csv} {pdf} {dimensions} {layout} {filter_unknown}",
         shell=True
     )
 
@@ -353,7 +384,7 @@ def count(fasta, csv):
 @click.argument('csv')
 @click.argument('txt')
 @click.argument('filtered_csv')
-def filter(csv, filtered_csv,  txt):
+def filter_csv(csv, filtered_csv,  txt):
     """Filter the coverge vector using ids in txt file"""
     click.echo('Filtering large matrix %s\nto match sequences in %s\ninto %s\n' % (csv, txt, filtered_csv))
     filter_matrix(csv, filtered_csv, txt)
@@ -418,15 +449,17 @@ def cladogram(csv, pdf):
 @click.argument('reduced_csv')
 @click.argument('pdf')
 @click.option('-g', '--group-by', help='Field in the dataset to use to color the cladogram.')
+@click.option('-f', '--filter-unknown', default=True, help='Filter fields that are unknown')
+@click.option('-l', '--layout', default="rectangular", help='tree layout')
 @click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
-def clado_rsvd(csv, group_by, reduced_csv, dimensions, pdf):
+def clado_rsvd(csv, group_by, filter_unknown, reduced_csv, dimensions, layout, pdf):
     """
     Combines cladogram and rsvd.
     Generate cladogram from rsvd reduced distance matrix.
     """
     click.echo("Performing rsvd and generating a coverage vector")
     dimensions = int(dimensions)
-    taxo_all(csv, reduced_csv, dimensions, pdf)
+    taxo_all(csv, reduced_csv, dimensions, pdf,  layout, filter_unknown)
     click.echo("Done")
 
 @cli.command()
