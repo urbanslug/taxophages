@@ -6,6 +6,7 @@ custom.lib.path <- "~/RLibraries"
 # Imports ----
 suppressPackageStartupMessages({
     require(rsvd)
+    library(dplyr) 
     require(ape)
     require(ggtree)
     require(ggplot2)
@@ -26,6 +27,8 @@ matrix.tsv <- args[1]
 recuded.matrix.path <- args[2]
 figure <- args[3]
 dimensions <- as.integer(args[4])
+layout <- args[5]
+filter_unknowns <- as.integer(args[6])
 
 # Fetch data ----
 message(sprintf("Reading matrix %s", matrix.tsv))
@@ -33,14 +36,23 @@ message(sprintf("Reading matrix %s", matrix.tsv))
 data.df <- read.delim(matrix.tsv)
 message("Successfully read matrix")
 
-# isolate only the coverage data
-coverage.df <- data.df[, 7:ncol(data.df)]
-metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:6])
+#filter unknowns
+if ( tolower(filter_unknowns)=="true" ) {
+  data.df.old <- data.df
+  data.df <- data.df %>% filter(region != "unknown")
+}
 
-grouping.field <- "date"
+
+# isolate only the coverage data
+coverage.df <- data.df[, 8:ncol(data.df)]
+metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
+
+grouping.field <- "region"
 gf <- metadata.df[[grouping.field]]
 unique.countries <- unique(gf)
 unique.countries.count <- length(unique.countries)
+
+
 
 # convert the coverage data into a matrix
 coverage.matrix <- as.matrix(coverage.df)
@@ -60,6 +72,7 @@ write.table(coverage.rsvd.v.df, recuded.matrix.path, sep="\t", row.names = TRUE)
 message("Calculating pairwise distances")
 coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
+coverage.tree$tip.label <- metadata.df$country
 
 # Visualization ----
 message("Generating rSVD tree")
@@ -76,9 +89,10 @@ colfunc <- colorRampPalette(myPalette)
 phage.colors <- c(colfunc(10),
                   rainbow(unique.countries.count)[3:unique.countries.count])
 
-p <- ggtree(coverage.tree, size=0.1, aes(color=date)) %<+% metadata.df
-p +
-  geom_tippoint(size=0.1, aes(color=date), show.legend=FALSE) +
+p <- ggtree(coverage.tree, layout=layout, size=0.1, aes(color=region)) %<+% metadata.df
+p + 
+  geom_tiplab() +
+  geom_tippoint(size=0.1, aes(color=region), show.legend=FALSE) +
   labs(title=plot.title) +
   scale_colour_manual(
     breaks=unique.countries,
@@ -89,5 +103,5 @@ p +
   )
 
 message(sprintf("Saving rSVD tree to %s", figure))
-ggsave(figure, units="cm", dpi=300, height=400, width=40, limitsize=FALSE)
+ggsave(figure, units="cm", dpi=300, height=400, width=400, limitsize=FALSE)
 dev.off()
