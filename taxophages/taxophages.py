@@ -469,6 +469,3 @@ def fun(count, name):
     """Pointless fun."""
     for x in range(count):
         click.echo('haha got your nose %s!' % name)
-
-if __name__ == '__main__':
-    cli()
