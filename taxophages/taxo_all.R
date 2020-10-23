@@ -6,7 +6,7 @@ custom.lib.path <- "~/RLibraries"
 # Imports ----
 suppressPackageStartupMessages({
     require(rsvd)
-    library(dplyr) 
+    require(dplyr)
     require(ape)
     require(ggtree)
     require(ggplot2)
@@ -28,7 +28,11 @@ recuded.matrix.path <- args[2]
 figure <- args[3]
 dimensions <- as.integer(args[4])
 layout <- args[5]
-filter_unknowns <- as.integer(args[6])
+filter_unknowns <- args[6]
+
+# handle args
+layout <- tolower(layout)
+filter_unknowns <- tolower(filter_unknowns)
 
 # Fetch data ----
 message(sprintf("Reading matrix %s", matrix.tsv))
@@ -37,22 +41,17 @@ data.df <- read.delim(matrix.tsv)
 message("Successfully read matrix")
 
 #filter unknowns
-if ( tolower(filter_unknowns)=="true" ) {
+if ( filter_unknowns=="true" ) {
+  message("Filtering out samples with region unknown.")
   data.df.old <- data.df
   data.df <- data.df %>% filter(region != "unknown")
 }
 
+# Preprocess ----
+message("Preprocessing the matrix")
 
 # isolate only the coverage data
 coverage.df <- data.df[, 8:ncol(data.df)]
-metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
-
-grouping.field <- "region"
-gf <- metadata.df[[grouping.field]]
-unique.countries <- unique(gf)
-unique.countries.count <- length(unique.countries)
-
-
 
 # convert the coverage data into a matrix
 coverage.matrix <- as.matrix(coverage.df)
@@ -60,7 +59,7 @@ coverage.matrix <- as.matrix(coverage.df)
 # transpose the matrix
 coverage.matrix.t <- t(coverage.matrix)
 
-# run rSVD
+# rSVD ----
 message(sprintf("Approximating coverge matrix down to %s dimensions", dimensions))
 coverage.rsvd <- rsvd(coverage.matrix.t, k=dimensions)
 coverage.rsvd.v <- coverage.rsvd$v
@@ -72,7 +71,32 @@ write.table(coverage.rsvd.v.df, recuded.matrix.path, sep="\t", row.names = TRUE)
 message("Calculating pairwise distances")
 coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
-coverage.tree$tip.label <- metadata.df$country
+
+# Metadata ----
+if (layout == "rectangular") {
+  # country as id
+  metadata.df <- cbind(id=data.df$country, data.df[, 1:7])
+  coverage.tree$tip.label <- metadata.df$country
+} else {
+  # numbers as id
+  metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
+}
+
+grouping.field <- "region"
+gf <- metadata.df[[grouping.field]]
+unique.countries <- unique(gf)
+unique.countries.count <- length(unique.countries)
+
+# number id
+# metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
+# country id
+#metadata.df <- cbind(id=data.df$country, data.df[, 1:7])
+
+#grouping.field <- "region"
+#gf <- metadata.df[[grouping.field]]
+#unique.countries <- unique(gf)
+#unique.countries.count <- length(unique.countries)
+#coverage.tree$tip.label <- metadata.df$country
 
 # Visualization ----
 message("Generating rSVD tree")
@@ -82,17 +106,17 @@ plot.title <- sprintf("rSVD Tree for %s samples", sample.size)
 legend.title <- grouping.field
 
 
-myPalette <-c("#708090", "#0014a8", "#9f00ff", "#177245", "#f984ef", "#ffae42",
-              "#03c03c", "#915f6d", "#f7e98e", "#0070ff", "#663854", "#e8000d",
-              "#704214", "#00ced1", "#ffa07a", "#b5651d",  "#918151")
-colfunc <- colorRampPalette(myPalette)
-phage.colors <- c(colfunc(10),
-                  rainbow(unique.countries.count)[3:unique.countries.count])
+phage.colors <- c("#000000", "#708090", "#0014a8", "#9f00ff", "#177245",
+                  "#f984ef", "#ffae42", "#03c03c", "#915f6d", "#f7e98e",
+                  "#0070ff", "#663854", "#e8000d", "#704214", "#00ced1",
+                  "#ffa07a", "#b5651d",  "#918151")
 
 p <- ggtree(coverage.tree, layout=layout, size=0.1, aes(color=region)) %<+% metadata.df
-p + 
-  geom_tiplab() +
-  geom_tippoint(size=0.1, aes(color=region), show.legend=FALSE) +
+if ( TRUE ) {
+  p <- p + geom_tiplab(size=0.5, aes(color="#000000"), show.legend=FALSE)
+}
+p +
+  geom_tippoint(size=0.01, aes(color=region), show.legend=FALSE) +
   labs(title=plot.title) +
   scale_colour_manual(
     breaks=unique.countries,
@@ -102,6 +126,20 @@ p +
     values=phage.colors
   )
 
+
 message(sprintf("Saving rSVD tree to %s", figure))
-ggsave(figure, units="cm", dpi=300, height=400, width=400, limitsize=FALSE)
+if (layout == "rectangular") {
+  figure.height <- 400
+  figure.width <- 40
+} else {
+  figure.height <- 200
+  figure.width <- 200
+}
+
+ggsave(figure,
+       dpi=300,
+       units="cm",
+       height=figure.height,
+       width=figure.width,
+       limitsize=FALSE)
 dev.off()
