@@ -5,11 +5,16 @@ custom.lib.path <- "~/RLibraries"
 
 # Imports ----
 suppressPackageStartupMessages({
-    require(rsvd)
-    require(dplyr)
-    require(ape)
-    require(ggtree)
-    require(ggplot2)
+  require(ape)
+  require(xml2)
+  require(rsvd)
+  require(purrr)
+  require(dplyr) 
+  require(ggtree)
+  require(ggplot2)
+  require(tidyverse)
+  require(svglite)
+  require(htmlwidgets)
   })
 
 # Command line arguments ----
@@ -48,10 +53,10 @@ if ( filter_unknowns=="true" ) {
 }
 
 # Preprocess ----
-message("Preprocessing the matrix")
+message("Preprocessing the coverge matrix")
 
 # isolate only the coverage data
-coverage.df <- data.df[, 8:ncol(data.df)]
+coverage.df <- data.df[, 9:ncol(data.df)]
 
 # convert the coverage data into a matrix
 coverage.matrix <- as.matrix(coverage.df)
@@ -73,13 +78,19 @@ coverage.dist <- dist(coverage.rsvd.v.df)
 coverage.tree <- nj(coverage.dist)
 
 # Metadata ----
+message("Preprocessing metadata")
 if (layout == "rectangular") {
-  # country as id
-  metadata.df <- cbind(id=data.df$country, data.df[, 1:7])
-  coverage.tree$tip.label <- metadata.df$country
+  # country, location and date as id
+  id.fields <- data.frame(data.df$country, 
+                          data.df$location, 
+                          data.df$date)
+  # join these into a single string
+  id <- unlist(pmap(id.fields, paste, sep=" / "))
+  metadata.df <- cbind(id=id, data.df[, 1:8])
+  coverage.tree$tip.label <- metadata.df$id
 } else {
   # numbers as id
-  metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
+  metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:8])
 }
 
 grouping.field <- "region"
@@ -111,20 +122,17 @@ phage.colors <- c("#000000", "#708090", "#0014a8", "#9f00ff", "#177245",
                   "#0070ff", "#663854", "#e8000d", "#704214", "#00ced1",
                   "#ffa07a", "#b5651d",  "#918151")
 
-p <- ggtree(coverage.tree, layout=layout, size=0.1, aes(color=region)) %<+% metadata.df
-if ( TRUE ) {
-  p <- p + geom_tiplab(size=0.5, aes(color="#000000"), show.legend=FALSE)
-}
-p +
+plot <- ggtree(coverage.tree, layout=layout, size=0.1, aes(color=region)) %<+% metadata.df
+plot +
   geom_tippoint(size=0.01, aes(color=region), show.legend=FALSE) +
+  geom_tiplab(size=0.5, aes(color="#000000"), show.legend=FALSE) +
   labs(title=plot.title) +
   scale_colour_manual(
     breaks=unique.countries,
     na.translate=TRUE,
     na.value="#cccccc",
     name=legend.title,
-    values=phage.colors
-  )
+    values=phage.colors)
 
 
 message(sprintf("Saving rSVD tree to %s", figure))
@@ -132,14 +140,33 @@ if (layout == "rectangular") {
   figure.height <- 400
   figure.width <- 40
 } else {
-  figure.height <- 200
+  figure.height <- 75
   figure.width <- 200
 }
 
+# SVG
 ggsave(figure,
-       dpi=300,
        units="cm",
        height=figure.height,
        width=figure.width,
        limitsize=FALSE)
+
 dev.off()
+
+message(sprintf("Converting tip labels to links for %s", figure))
+# edit the SVG to have links
+my_links <- with(metadata.df, setNames(path.name, id))
+
+xml <- read_xml(figure)
+xml %>% xml_find_all(xpath="//d1:text") %>% 
+  keep(xml_text(.) %in% names(my_links)) %>% 
+  xml_add_parent("a", "xlink:href" = my_links[xml_text(.)], target = "_blank")
+
+write_xml(xml, figure)
+
+# Zoom ----
+dir <- getwd()
+html_figure <- paste(dir, "test.html", sep="")
+message(sprintf("Wrap HTML for %s", html_figure))
+html_widget <- svgPanZoom(xml)
+saveWidget(html_widget, html_figure)
