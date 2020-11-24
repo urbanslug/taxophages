@@ -12,21 +12,17 @@ suppressPackageStartupMessages(
     require(ggplot2)
     require(svglite)
     require(tidyverse)
+    require(svgPanZoom)
   })
 
 setwd("~/src/Work/UT/taxophages")
 
-file <- "covid.qc.sample100.metadata.lcr.matrix.csv"
+file <- "sample.100.metadata.tsv"
 
-matrix.tsv <- sprintf("./Data/%s", file)
+matrix.tsv <- sprintf("./test/data/%s", file)
 dimensions <- 10
-figure <-"./Figures/tree_with_countries" 
-
-figure_links <-"./Figures/tree_with_countries_links" 
+figure <-"./Figures/otherplot.svg" 
 layout <- "rectangular"
-
-
-
 filter_unknowns <- TRUE
 
 # handle args
@@ -92,16 +88,7 @@ gf <- metadata.df[[grouping.field]]
 unique.countries <- unique(gf)
 unique.countries.count <- length(unique.countries)
 
-# number id
-# metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
-# country id
-#metadata.df <- cbind(id=data.df$country, data.df[, 1:7])
 
-#grouping.field <- "region"
-#gf <- metadata.df[[grouping.field]]
-#unique.countries <- unique(gf)
-#unique.countries.count <- length(unique.countries)
-#coverage.tree$tip.label <- metadata.df$country
 
 # Visualization ----
 message("Generating rSVD tree")

@@ -103,11 +103,10 @@ def cladogram(csv, pdf):
 @click.argument('csv')
 @click.argument('reduced_csv')
 @click.argument('pdf')
-@click.option('-g', '--group-by', help='Field in the dataset to use to color the cladogram.')
 @click.option('-f', '--filter-unknown', default=True, help='Filter fields that are unknown')
 @click.option('-l', '--layout', default="rectangular", help='tree layout')
 @click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
-def clado_rsvd(csv, group_by, filter_unknown, reduced_csv, dimensions, layout, pdf):
+def clado_rsvd(csv, filter_unknown, reduced_csv, dimensions, layout, pdf):
     """
     Combines cladogram and rsvd.
     Generate cladogram from rsvd reduced distance matrix.

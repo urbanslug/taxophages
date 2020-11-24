@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+
 custom.lib.path <- "~/RLibraries"
 .libPaths( c( custom.lib.path, .libPaths()) )
 
@@ -10,11 +11,13 @@ suppressPackageStartupMessages({
   require(rsvd)
   require(purrr)
   require(dplyr) 
-  require(ggtree)
   require(ggplot2)
   require(tidyverse)
   require(svglite)
   require(htmlwidgets)
+  require(svgPanZoom)
+  require(R.utils)
+  require(ggtree)
   })
 
 # Command line arguments ----
@@ -98,17 +101,6 @@ gf <- metadata.df[[grouping.field]]
 unique.countries <- unique(gf)
 unique.countries.count <- length(unique.countries)
 
-# number id
-# metadata.df <- cbind(id = 1:nrow(data.df), data.df[, 1:7])
-# country id
-#metadata.df <- cbind(id=data.df$country, data.df[, 1:7])
-
-#grouping.field <- "region"
-#gf <- metadata.df[[grouping.field]]
-#unique.countries <- unique(gf)
-#unique.countries.count <- length(unique.countries)
-#coverage.tree$tip.label <- metadata.df$country
-
 # Visualization ----
 message("Generating rSVD tree")
 
@@ -135,7 +127,6 @@ plot +
     values=phage.colors)
 
 
-message(sprintf("Saving rSVD tree to %s", figure))
 if (layout == "rectangular") {
   figure.height <- 400
   figure.width <- 40
@@ -144,8 +135,19 @@ if (layout == "rectangular") {
   figure.width <- 200
 }
 
+
+# File writing ----
+figure.absolute <- getAbsolutePath(figure)
+figure.sans_ext <- tools::file_path_sans_ext(figure.absolute)
+figure.dir <- dirname(figure.sans_ext)
+figure.basename <- basename(figure.sans_ext)
+
+
 # SVG
-ggsave(figure,
+svg_figure <- paste(figure.basename, "svg", sep=".")
+svg_figure.path <- file.path(figure.dir, svg_figure)
+message(sprintf("Saving rSVD tree to %s", svg_figure.path))
+ggsave(svg_figure.path,
        units="cm",
        height=figure.height,
        width=figure.width,
@@ -153,22 +155,29 @@ ggsave(figure,
 
 dev.off()
 
-message(sprintf("Converting tip labels to links for %s", figure))
+message(sprintf("Converting tip labels to links for %s", svg_figure.path))
 # edit the SVG to have links
 my_links <- with(metadata.df, setNames(path.name, id))
 
-xml <- read_xml(figure)
+xml <- read_xml(svg_figure.path)
 xml %>% xml_find_all(xpath="//d1:text") %>% 
   keep(xml_text(.) %in% names(my_links)) %>% 
   xml_add_parent("a", "xlink:href" = my_links[xml_text(.)], target = "_blank")
 
-write_xml(xml, figure)
+write_xml(xml, svg_figure.path)
 
-# Zoom ----
-figure.dir <- dirname(figure)
-figure.basename <- basename(figure)
-html_figure <- paste(figure.dir, "/", figure.basename, ".html", sep="")
+# HTML ----
+html_figure <- paste(figure.basename, "html", sep=".")
+html_figure.path <- file.path(figure.dir, html_figure)
 
-message(sprintf("Wrap HTML for %s", html_figure))
-html_widget <- svgPanZoom(xml)
-saveWidget(html_widget, html_figure)
+message(sprintf("Wrap HTML for %s", html_figure.path))
+
+xml_attr(xml, "viewBox") <- "0 0 1500 20000"
+html_widget <- svgPanZoom(
+  xml,
+  height="100%",
+  width="100%",
+  controlIconsEnabled=TRUE
+)
+
+saveWidget(html_widget, html_figure.path)

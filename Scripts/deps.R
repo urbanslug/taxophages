@@ -7,7 +7,7 @@ custom.lib.path <-"~/RLibraries"
 mirror <- "http://mirrors.nics.utk.edu/cran/"
 .libPaths( c(custom.lib.path, .libPaths()) )
 
-list.of.packages <- c("rsvd", "ape", "ggplot2",
+list.of.packages <- c("rsvd", "ape", "ggplot2", "R.utils",
                       # ggtree deps
                       "aplot", "dplyr", "purrr", "rvcheck",
                       "tidyr", "tidytree", "jsonlite" )
