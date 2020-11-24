@@ -165,8 +165,10 @@ xml %>% xml_find_all(xpath="//d1:text") %>%
 write_xml(xml, figure)
 
 # Zoom ----
-dir <- getwd()
-html_figure <- paste(dir, "test.html", sep="")
+figure.dir <- dirname(figure)
+figure.basename <- basename(figure)
+html_figure <- paste(figure.dir, "/", figure.basename, ".html", sep="")
+
 message(sprintf("Wrap HTML for %s", html_figure))
 html_widget <- svgPanZoom(xml)
 saveWidget(html_widget, html_figure)
