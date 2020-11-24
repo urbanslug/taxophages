@@ -180,9 +180,9 @@ def query_arvados(id):
     r = requests.get(samples_endpoint_url.format(id))
 
     if r.status_code != 200:
-        return None;
+        return None
 
-    sample = json.loads(r.text);
+    sample = json.loads(r.text)
     date = sample["sample"]["collection_date"]
     location_url = sample["sample"]["collection_location"]
     location = location_url.split("/")[-1]
@@ -200,27 +200,31 @@ def get_results(query):
     return sparql.query().convert()
 
 def get_country(location):
-    query = """
-    SELECT DISTINCT ?countryName WHERE {
-      wd:%s wdt:P17 ?country .
+    query = \
+        """
+        SELECT DISTINCT ?countryName ?location WHERE {
+          wd:%s rdfs:label ?location .
+          FILTER (langMatches( lang(?location),  "EN" ) )
 
-      # country
-      ?country rdfs:label ?countryName .
-      FILTER (langMatches( lang(?countryName),  "EN" ) )
-    } LIMIT 1
-    """  % (location)
+          wd:%s wdt:P17 ?country .
+
+          # country
+          ?country rdfs:label ?countryName .
+          FILTER (langMatches( lang(?countryName),  "EN" ) )
+        } LIMIT 1
+        """ % (location, location)
 
     try:
         results = get_results(query)
-        bindings = results["results"]["bindings"]
-        country = bindings[0]["countryName"]["value"]
-        region = lookup_region(country)
+        bindings = results["results"]["bindings"][0]
+        country = bindings["countryName"]["value"]
+        loc = bindings["location"]["value"]
 
+        region = lookup_region(country)
         if region is None:
             region = unknown
 
-        #print(f"{country} {region}")
-        return {"country": country, "region": region}
+        return {"country": country, "region": region, "location": loc}
     except urllib.error.HTTPError as exception:
         print(exception)
         print(location)
@@ -252,17 +256,17 @@ def get_metadata(hashes):
 
         if metadata == None:
             #entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
-            entries.append([sequence_hash, unknown, unknown, unknown])
+            entries.append([sequence_hash, unknown, unknown, unknown, unknown])
             continue
 
         location, date = [metadata[item] for item in ('location', 'date')]
         geo = get_country(location)
 
         if geo == None:
-            entries.append([sequence_hash, date, unknown, unknown])
+            entries.append([sequence_hash, date, unknown, unknown, unknown])
         else:
-            country, region = [geo[item] for item in ('country', 'region')]
-            entries.append([sequence_hash, date, country, region])
+            country, region, loc = [geo[item] for item in ('country', 'region', 'location')]
+            entries.append([sequence_hash, date, loc, country, region])
 
     return entries
 
@@ -299,7 +303,7 @@ def loop_hashes(input_csv, csv_with_metadata):
 
     click.echo("Extracting hashes from path names.")
     hashes = []
-    pattern = "\=(.*?)\/"
+    pattern = r"\=(.*?)\/" # is this r prefix a good idea?
     for path_name in path_names:
         substring = re.search(pattern, path_name).group(1)
         hashes.append(substring.strip())
@@ -308,8 +312,11 @@ def loop_hashes(input_csv, csv_with_metadata):
     entries = get_metadata(hashes)
 
     click.echo("Prepending metadata")
-    fieldnames = ['sample', 'date', 'country', 'region']
-    combined = prepend_metadata({"field_names": fieldnames, "data": entries}, {"field_names": field_names, "data": data})
+    fieldnames = ['sample', 'date', 'location', 'country', 'region']
+    combined = prepend_metadata(
+        {"field_names": fieldnames, "data": entries},
+        {"field_names": field_names, "data": data}
+    )
 
     click.echo("Preparing csv")
 
@@ -336,12 +343,6 @@ def taxo_cladogram(csv_file_path, cladogram_file_path):
         shell=True
     )
 
-def taxo_cladogram(csv_file_path, cladogram_file_path):
-    click.echo("Calling taxo_rSVD.R")
-    subprocess.call (
-        f"./taxophages/taxo_cladogram.R {csv_file_path} {cladogram_file_path}",
-        shell=True
-    )
 def taxo_all(csv, reduced_csv, dimensions, pdf, layout, filter_unknown):
     click.echo("Calling taxo_all.R")
     subprocess.call (
@@ -467,5 +468,5 @@ def clado_rsvd(csv, group_by, filter_unknown, reduced_csv, dimensions, layout, p
 @click.argument('name')
 def fun(count, name):
     """Pointless fun."""
-    for x in range(count):
+    for _ in range(count):
         click.echo('haha got your nose %s!' % name)
