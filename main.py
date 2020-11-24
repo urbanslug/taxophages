@@ -1,4 +1,4 @@
-from taxophages.taxophages import cli
+from taxophages.cli import cli
 
 if __name__ == '__main__':
     cli()
