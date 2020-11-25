@@ -74,9 +74,11 @@ def get_country(location):
             region = unknown
 
         return {"country": country, "region": region, "location": loc}
+    except IndexError as exception:
+        print("Exception: %s Location: %s" % (exception, location))
+        return None
     except urllib.error.HTTPError as exception:
-        print(exception)
-        print(location)
+        print("Exception: %s Location: %s" % (exception, location))
         return None
     except KeyError:
         return None
