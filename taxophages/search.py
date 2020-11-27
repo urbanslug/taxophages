@@ -4,9 +4,6 @@ import sys
 import click
 from math import floor
 
-def string_to_int(l):
-    return [int(i) for i in l]
-
 
 def search(tsv, query_tsv):
     click.echo("Reading %s" % tsv)
@@ -21,8 +18,8 @@ def search(tsv, query_tsv):
     cut = min(len(search_matrix[0]), len(query_matrix)) - 1
     click.echo("Truncating coverage vectors at %s" % cut)
 
-
     click.echo("Finding the closest sample")
+    string_to_int = lambda l : [int(i) for i in l]
     dist = ("", sys.maxsize)
     with click.progressbar(search_matrix) as samples:
         for sample in samples:
