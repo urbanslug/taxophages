@@ -22,7 +22,7 @@ def search(tsv, query_tsv):
     click.echo("Truncating coverage vectors at %s" % cut)
 
 
-    click.echo("Computing distances")
+    click.echo("Finding the closest sample")
     dist = ("", sys.maxsize)
     with click.progressbar(search_matrix) as samples:
         for sample in samples:
