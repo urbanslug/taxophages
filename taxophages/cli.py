@@ -5,7 +5,7 @@ from .base import filter_threshold, base_count, \
     taxo_all, taxo_cladogram, taxo_rsvd
 
 from .metadata import get_and_prepend_metadata
-
+from .search import search as naive_search
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -114,6 +114,18 @@ def clado_rsvd(csv, filter_unknown, reduced_csv, dimensions, layout, pdf):
     click.echo("Performing rsvd and generating a coverage vector")
     dimensions = int(dimensions)
     taxo_all(csv, reduced_csv, dimensions, pdf,  layout, filter_unknown)
+    click.echo("Done")
+
+@cli.command()
+@click.argument('tsv')
+@click.argument('query_tsv')
+def search(tsv, query_tsv):
+    """
+    Search for the closest sequence to a given query tsv
+    Injects this new tsv into the existing one and calculates pairwise distance comparisons
+    """
+    click.echo("Searching for the closest sequence to %s in %s" % (query_tsv, tsv))
+    naive_search(tsv, query_tsv)
     click.echo("Done")
 
 @cli.command()
