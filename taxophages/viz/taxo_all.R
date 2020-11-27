@@ -128,7 +128,7 @@ plot +
 
 
 if (layout == "rectangular") {
-  figure.height <- 500
+  figure.height <- 700
   figure.width <- 40
 } else {
   figure.height <- 75
