@@ -1,10 +1,10 @@
 # Taxophages
-A tool for generating cladograms and analyzing sequences.
-
-Currently tightly coupled to [COVID-19 PubSeq: Public SARS-CoV-2 Sequence Resource](http://covid19.genenetwork.org/).
+A tool for generating cladograms and analyzing sequences.  
+Currently tightly coupled to data from
+[COVID-19 PubSeq: Public SARS-CoV-2 Sequence Resource](http://covid19.genenetwork.org/).
 
 ### Demo
-Example output: [rsvd tree for ~7k sequences](urbanslug.github.io/taxophages/).
+Example output: [rsvd tree for ~25k sequences](urbanslug.github.io/taxophages/).
 
 
 ### Install
