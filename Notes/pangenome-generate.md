@@ -1,7 +1,6 @@
 Following [pangenome generate spoa cwl workflow][spoa workflow]
 in [arvados/bh20-seq-resource/workflows/pangenome-generate/][pangenome generate]
 
-
 ---
 
 ### 1. Fetch the dataset
@@ -53,11 +52,18 @@ spoa -G -g -6 $SORTED_FASTA_FILE > $SPOA_GRAPH
 ### 4. Induce odgi graph
 
 ```bash
-SORTED_UNCHOPPED_ODGI_GRAPH=data/downloaded/files/relabeledSeqs.unchop.sorted.odgi
 
-odgi build -g $SPOA_GRAPH -o - | \
-    odgi unchop -i - -o - | \
-    odgi sort -i - -p s -o $SORTED_UNCHOPPED_ODGI_GRAPH
+ODGI_GRAPH=data/downloaded/files/relabeledSeqs.og
+UNCHOPPED_ODGI_GRAPH=data/downloaded/files/relabeledSeqs.unchop.og
+SORTED_UNCHOPPED_ODGI_GRAPH=data/downloaded/files/relabeledSeqs.unchop.sorted.og
+SORTED_UNCHOPPED_ODGI_GFA_GRAPH=data/downloaded/files/relabeledSeqs.unchop.sorted.gfa
+
+odgi build -g $SPOA_GRAPH -o $ODGI_GRAPH
+odgi unchop -i $ODGI_GRAPH -o $UNCHOPPED_ODGI_GRAPH
+
+odgi sort -i $UNCHOPPED_ODGI_GRAPH -p s -o $SORTED_UNCHOPPED_ODGI_GRAPH
+
+odgi view -i $SORTED_UNCHOPPED_ODGI_GRAPH -g > $SORTED_UNCHOPPED_ODGI_GFA_GRAPH
 ```
 
 ### 5. Extract coverage matrix
