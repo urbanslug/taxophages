@@ -1,4 +1,5 @@
 message: Hello world!
+
 paths: paths
 input_flag: true
 input_x_flag: true
@@ -6,4 +7,9 @@ graph:
   class: File
   path: ../data/30k/relabeledSeqs.unchop.sorted.og
 
-coverage_vector: ../coverage.tsv
+main_py_script: ../main.py
+metadata: metadata
+coverage_matrix:
+  class: File
+  path: ./coverage.tsv
+coverage_matrix_with_metadata: ./coverage.metadata.tsv

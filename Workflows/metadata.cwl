@@ -3,33 +3,27 @@
 cwlVersion: v1.1
 
 class: CommandLineTool
-baseCommand: odgi
+baseCommand: python
 
 inputs:
-  paths:
+  main_py_script:
     type: string
     inputBinding:
       position: 1
 
-  input_flag:
-    type: boolean
+  metadata:
+    type: string
     inputBinding:
       position: 2
-      prefix: -i
 
-  graph:
+  coverage_matrix:
     type: File
     inputBinding:
         position: 3
 
-  input_x_flag:
-    type: boolean
+  coverage_matrix_with_metadata:
+    type: string
     inputBinding:
-      position: 4
-      prefix: -H
+        position: 4
 
-outputs:
-  coverage_matrix:
-    type: stdout
-
-stdout: coverage.tsv
+outputs: []
