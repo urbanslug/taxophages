@@ -49,7 +49,7 @@ Could be extended with -k 11 -X 2 e.g.
 ```sh
 GCSA_INDEX=data/vg/relabeledSeqs.unchop.sorted.gcsa
 
-vg index -g $GCSA_INDEX -f $PRUNED_XG_GRAPH
+vg index -t 24 -g $GCSA_INDEX -k 11 -X 2 $XG_GRAPH
 ```
 
 
