@@ -3,18 +3,29 @@ A tool for generating cladograms and analyzing sequences.
 Currently tightly coupled to data from
 [COVID-19 PubSeq: Public SARS-CoV-2 Sequence Resource](http://covid19.genenetwork.org/).
 
-### Demo
+## Demo
 Example output: [rsvd tree for ~25k sequences](urbanslug.github.io/taxophages/).
 
 
-### Install
+## Install
+
+### Virtual Environment
 
 Advisable to use a virtual environment
+
 ```
 pip install -r requirements/base.pip
 ```
 
-#### Running
+### Docker
+
+Build a docker container for taxophages
+
+```
+docker build -t taxophages:latest .
+```
+
+## Running
 
 ```
 $ python  main.py -h
