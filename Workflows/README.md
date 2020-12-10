@@ -1,1 +1,1 @@
-Refer to [../docs/Workflows.md](../docs/Workflows.md)
+Documentation on workflows is in [../docs/Workflows.md](../docs/Workflows.md)
