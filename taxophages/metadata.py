@@ -1,3 +1,5 @@
+import os
+
 import csv
 import click
 from random import randint
@@ -114,9 +116,13 @@ def get_metadata(sequence_identifiers):
     """
     Get metadata associated with a given sequence identifier
     """
-    # entries is a lists of lists containing sample, date, country, region
     global countries
-    countries = read_document("./taxophages/countries.csv")
+    
+    working_dir = os.path.dirname(os.path.realpath(__file__))
+    countries_csv_path = os.path.join(working_dir, "countries.csv")
+    countries = read_document(countries_csv_path)
+
+    # entries is a lists of lists containing sample, date, country, region
     entries = []
 
     for sequence_identifier in sequence_identifiers:

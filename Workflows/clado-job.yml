@@ -7,7 +7,9 @@ graph:
   class: File
   path: ../data/30k/relabeledSeqs.unchop.sorted.og
 
-main_py_script: ../main.py
+main_py_script:
+  class: File
+  path: ../main.py
 metadata: metadata
 coverage_matrix:
   class: File

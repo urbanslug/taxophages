@@ -10,5 +10,5 @@ cwltool --no-container coverage.cwl clado-job.yml
 
 Fetch metadata
 ```
-cwltool --no-container metadata.cwl clado-job.yml
+cwltool --preserve-entire-environment --no-container metadata.cwl clado-job.yml
 ```
