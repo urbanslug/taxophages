@@ -15,3 +15,10 @@ coverage_matrix:
   class: File
   path: ./coverage.tsv
 coverage_matrix_with_metadata: ./coverage.metadata.tsv
+
+clado-rsvd: clado-rsvd
+cladogram_matrix:
+  class: File
+  path: ./coverage.metadata.tsv
+reduced_matrix: ./coverage.reduced.tsv
+svg_figure: 30k_700cm.svg
