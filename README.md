@@ -7,23 +7,8 @@ Currently tightly coupled to data from
 Example output: [rsvd tree for ~25k sequences](urbanslug.github.io/taxophages/).
 
 
-## Install
-
-### Virtual Environment
-
-Advisable to use a virtual environment
-
-```
-pip install -r requirements/base.pip
-```
-
-### Docker
-
-Build a docker container for taxophages
-
-```
-docker build -t taxophages:latest .
-```
+## Documentation 
+Refer to the [docs directory](./docs)
 
 ## Running
 
