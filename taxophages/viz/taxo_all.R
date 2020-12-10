@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
-
-custom.lib.path <- "~/RLibraries"
+custom.lib.path <- Sys.getenv("R_PACKAGES")
 .libPaths( c( custom.lib.path, .libPaths()) )
 
 # Imports ----

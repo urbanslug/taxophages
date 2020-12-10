@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import csv
 import click
@@ -123,7 +124,11 @@ def taxo_cladogram(csv_file_path, cladogram_file_path):
 
 def taxo_all(csv, reduced_csv, dimensions, pdf, layout, filter_unknown):
     click.echo("Calling taxo_all.R")
+
+    working_dir = os.path.dirname(os.path.realpath(__file__))
+    taxo_all_script = os.path.join(working_dir, "viz/taxo_all.R")
+
     subprocess.call (
-        f"./taxophages/viz/taxo_all.R {csv} {reduced_csv} {pdf} {dimensions} {layout} {filter_unknown}",
+        f"{taxo_all_script} {csv} {reduced_csv} {pdf} {dimensions} {layout} {filter_unknown}",
         shell=True
     )
