@@ -1,7 +1,7 @@
 import click
 
 from .base import filter_threshold, base_count, \
-    filter_matrix, sample_matrix, isolate_fields, \
+    filter_matrix, sample_matrix, sample_sequences, prep_q, split_fasta, isolate_fields, \
     taxo_all, taxo_cladogram, taxo_rsvd
 
 from .metadata import get_and_prepend_metadata
@@ -49,7 +49,7 @@ def filter_csv(csv, filtered_csv,  txt):
 @click.option('-s', '--size', default=100, help='Sample size. Default 100.')
 @click.argument('csv')
 @click.argument('sampled_csv')
-def sample(size, csv, sampled_csv):
+def sample_coverage(size, csv, sampled_csv):
     """
     Take a random sample from a coverage matrix.
     """
@@ -57,6 +57,35 @@ def sample(size, csv, sampled_csv):
     size = int(size)
     sample_matrix(size, csv, sampled_csv)
 
+@cli.command()
+@click.option('-s', '--size', default=100, help='Sample size. Default 100.')
+@click.argument('fasta')
+@click.argument('sampled_fasta')
+def sample_fasta(size, fasta, sampled_fasta):
+    """
+    Take a random sample of sequences from a given fasta file.
+    """
+    click.echo('Taking %s random samples from %s into %s' % (size, fasta, sampled_fasta))
+    size = int(size)
+    sample_sequences(size, fasta, sampled_fasta)
+
+@cli.command()
+@click.argument('fasta')
+@click.argument('output_dir')
+def split_sequences(fasta, output_dir):
+    """
+    Create a file from each fasta entry
+    """
+    split_fasta(fasta, output_dir)
+
+@cli.command()
+@click.argument('fasta')
+@click.argument('output_fasta')
+def prepare_query(fasta, output_fasta):
+    """
+    Create a file from each fasta entry
+    """
+    prep_q(fasta, output_fasta)
 
 @cli.command()
 @click.argument('csv')

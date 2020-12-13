@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import re
 
 import csv
 import click
@@ -8,6 +9,56 @@ import subprocess
 
 from .io import file_len, write_document, read_document, write_txt, read_txt
 from .utils import isolate_field
+
+from Bio import SeqIO
+
+def sample_sequences(size, fasta, sampled_fasta):
+    """
+    """
+    sequences = list(SeqIO.parse(open(fasta),'fasta'))
+    sequence_count = len(sequences)
+
+    if size > len(sequences):
+        raise Exception("Sample size larger than number of sequences")
+
+    random_indexes = []
+    for _ in range(size):
+        random_index = randint(1, sequence_count)
+        random_indexes.append(random_index)
+
+    sampled = []
+
+    for i in random_indexes:
+        fasta = sequences[i]
+        sampled.append('>'+fasta.id)
+        sampled.append(str(fasta.seq))
+
+    write_txt(sampled, sampled_fasta, True)
+
+def split_fasta(fasta, output_dir):
+    """
+    """
+    if not os.path.isdir(output_dir):
+        raise Exception("Output directory does not exist")
+
+    sequences = SeqIO.parse(open(fasta),'fasta')
+
+    click.echo("Generating files")
+    pattern =  r"lugli[a-z0-9-]*"
+    with click.progressbar(sequences) as seqs:
+        for sequence in seqs:
+            seq_id = sequence.id
+            entry = ['>'+seq_id, str(sequence.seq)]
+            file_name = re.search(pattern, seq_id).group()
+            output_file = os.path.join(output_dir, file_name)
+            write_txt(entry, output_file, True)
+
+def prep_q(fasta, output_fasta):
+    sequence = SeqIO.parse(open(fasta),'fasta').__next__()
+
+    seq_id = sequence.id
+    entry = ['>'+seq_id, str(sequence.seq)]
+    write_txt(entry, output_fasta, True)
 
 def isolate_fields(input_csv, field_name, txt_path):
     rows = read_document(input_csv)
