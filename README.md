@@ -5,7 +5,7 @@ Tightly coupled with data from
 [COVID-19 PubSeq: Public SARS-CoV-2 Sequence Resource](http://covid19.genenetwork.org/) (for now).
 
 ## Demo
-The kind of cladogram that taxophages can generate is here, [an rsvd tree for ~25k sequences](urbanslug.github.io/taxophages/).
+The kind of cladogram that taxophages can generate is here: [an rsvd tree for ~25k sequences](https://urbanslug.github.io/taxophages/).
 
 ## Documentation 
 Refer to the [docs directory](./docs).
