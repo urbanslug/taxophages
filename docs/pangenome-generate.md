@@ -8,7 +8,7 @@ in [arvados/bh20-seq-resource/workflows/pangenome-generate/][pangenome generate]
 FASTA_URL="https://collections.lugli.arvadosapi.com/c=e1bb8bff3420e8b478fbe8af4260d6ba-849/_/relabeledSeqs.fasta"
 FASTA_FILE=data/downloaded/files/relabeledSeqs.fasta
 
-curl --insecure -L $FASTA_URL > $FASTA_FILE
+curl --insecure -L $FASTA_URL -o $FASTA_FILE
 ```
 
 #### Count the number of sequences
