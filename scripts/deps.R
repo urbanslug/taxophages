@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 
+# Run with R_PACKAGES="~/RLibraries" ./deps.R
 
 # Install deps in ~/RLibraries  ----
-custom.lib.path <-"~/RLibraries"
+custom.lib.path <- Sys.getenv("R_PACKAGES")
 # use insecure mirror
 mirror <- "http://mirrors.nics.utk.edu/cran/"
 .libPaths( c(custom.lib.path, .libPaths()) )
