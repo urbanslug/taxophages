@@ -27,6 +27,8 @@ R_PACKAGES=${HOME}/RLibraries \
 ## Visualize it in nextstrain
 
 Set vars needed to generate the nextstrain visualization.
+Find the config files in the [config directory][1].
+
 ```bash
 DATASET_DIR=.
 
@@ -67,5 +69,4 @@ Visualize the tree in your browser
 auspice view --datasetDir $DATASET_DIR
 ```
 
-
-
+[1]: ../config
