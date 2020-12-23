@@ -26,14 +26,14 @@ R_PACKAGES=${HOME}/RLibraries \
 
 ## Visualize it in nextstrain
 
-Set vars needed to generate the nextstrain visualization.
+Set vars needed to generate the nextstrain visualization.  
 Find the config files in the [config directory][1].
 
 ```bash
 DATASET_DIR=.
 
 INPUT_TREE=${DATASET_DIR}/${DATASET_ID}.nwk
-NODE_DATA=${DATASET_DIR}/node_data.json
+NODE_DATA=${DATASET_DIR}/node_data.${DATASET_ID}.json
 REFINED_TREE=${DATASET_DIR}/refined.${DATASET_ID}.nwk
 METADATA=${DATASET_DIR}/metadata.${DATASET_ID}.tsv
 
@@ -51,7 +51,10 @@ augur refine \
   --metadata $METADATA \
   --output-node-data $NODE_DATA \
   --output-tree $REFINED_TREE
+```
 
+Generate the JSON file needed by nextstrain.
+```bash
 augur export v2 \
   --tree $REFINED_TREE \
   --metadata $METADATA \
