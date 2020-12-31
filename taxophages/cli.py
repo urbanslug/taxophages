@@ -6,6 +6,8 @@ from .base import filter_threshold, base_count, \
 
 from .metadata import get_and_prepend_metadata
 from .search import search as naive_search
+from .prune import prune as prune_matrix
+
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -155,6 +157,16 @@ def search(tsv, query_tsv):
     """
     click.echo("Searching for the closest sequence to %s in %s" % (query_tsv, tsv))
     naive_search(tsv, query_tsv)
+    click.echo("Done")
+
+@cli.command()
+@click.argument('distance_matrix')
+@click.argument('metadata')
+@click.argument('pruned_metadata')
+def prune(distance_matrix, metadata, pruned_metadata):
+    """
+    """
+    prune_matrix(distance_matrix, metadata, pruned_metadata)
     click.echo("Done")
 
 @cli.command()
