@@ -9,9 +9,10 @@ if ( Sys.getenv("TAXOPHAGES_ENV")=="server" ) {
   recuded.matrix.path <- args[2]
   metadata.path <- args[3]
   newick.tree.path <- args[4]
+  distance.matrix.path <- args[5]
 
-  dimensions <- as.integer(args[5])
-  filter_unknowns <- args[6]
+  dimensions <- as.integer(args[6])
+  filter_unknowns <- args[7]
 
   # handle args
   filter_unknowns <- tolower(filter_unknowns)
@@ -26,6 +27,7 @@ if ( Sys.getenv("TAXOPHAGES_ENV")=="server" ) {
   recuded.matrix.path <- "../../trees/covid/sample_reduced_100.tsv"
   metadata.path <- "../../trees/covid/sample_metadata_100.tsv"
   newick.tree.path <- "../../trees/covid/sample_100_tree.nwk"
+  distance.matrix.path <- "../../trees/covid/sample_100_dist.tsv"
 
   dimensions <- 10
   filter_unknowns <- "true"
@@ -78,22 +80,56 @@ coverage.rsvd.v <- coverage.rsvd$v
 
 message(sprintf("Saving reduced matrix to %s", recuded.matrix.path))
 coverage.rsvd.v.df <- data.frame(coverage.rsvd.v)
-write.table(coverage.rsvd.v.df, recuded.matrix.path, sep="\t", row.names = TRUE)
+write.table(coverage.rsvd.v.df,
+            recuded.matrix.path,
+            sep="\t",
+            row.names = TRUE)
 
 message("Calculating pairwise distances")
 coverage.dist <- dist(coverage.rsvd.v)
 coverage.tree <- nj(coverage.dist)
 
+coverage.matrix <- as.matrix(coverage.dist)
+message(sprintf("Writing the distance matrix to %s", distance.matrix.path))
+write.table(coverage.matrix,
+            file= distance.matrix.path,
+            row.names = F,
+            sep='\t',
+            quote = FALSE)
+
 # Metadata ----
 message("Preprocessing metadata")
+metadata.df <- data.df[, 1:8]
 
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
 extract_short_hash <- function(d) {
   hash <- strsplit(d, "-", fixed = TRUE)[[1]][3]
-  substr(hash, 1,6)
+  substrRight(hash, 8)
 }
-strain <- sapply(data.df$sample, extract_short_hash, USE.NAMES = F)
+strain <- sapply(metadata.df$sample, extract_short_hash, USE.NAMES = F)
 
-metadata.df <- cbind(strain=strain, data.df[, 1:8])
+country <- metadata.df$country
+location <- metadata.df$location
+
+for (row in 1:length(country)) {
+  country <- gsub("People's Republic of China", "China", country, fixed=T)
+  location <- gsub("People's Republic of China", "China", location, fixed=T)
+}
+
+id.df <- data.frame(country, location, strain, metadata.df$date)
+
+# join these into a single string separated by a slash
+id.list <- pmap(id.df, paste, sep="/")
+
+replace_underscores <- function(id) {
+  str_replace_all(id, " ", "_")
+}
+id.list.no_space = lapply(id.list, replace_underscores)
+id <- unlist(id.list.no_space)
+
+metadata.df <- cbind(strain=id, metadata.df)
 
 # rename path.name to url
 names(metadata.df)[names(metadata.df) == 'path.name'] <- 'url'
@@ -106,4 +142,8 @@ message(sprintf("Writing tree to %s", newick.tree.path))
 write.tree(coverage.tree, newick.tree.path)
 
 message(sprintf("Writing metadata to %s", metadata.path))
-write.table(metadata.df, file=metadata.path, row.names = F, sep='\t', quote = FALSE)
+write.table(metadata.df,
+            file=metadata.path,
+            row.names = F,
+            sep='\t',
+            quote = FALSE)
