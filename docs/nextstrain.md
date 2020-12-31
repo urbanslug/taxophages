@@ -10,6 +10,7 @@ CSV=${DATASET_DIR}/covmatrix.${DATASET_ID}.metadata.tsv
 REDUCED_MATRIX=${DATASET_DIR}/reduced.${DATASET_ID}.tsv
 METADATA=${DATASET_DIR}/metadata.${DATASET_ID}.tsv
 NEWICK_TREE=${DATASET_DIR}/${DATASET_ID}.nwk
+DISTANCE_MATRIX=${DATASET_DIR}/distance_matrix.${DATASET_ID}.tsv
 
 DIMENSIONS=100
 FILTER_UNKNOWNS=TRUE
@@ -21,7 +22,7 @@ Generate the tree in newick format.
 TAXOPHAGES_ENV=server \
 R_PACKAGES=${HOME}/RLibraries \
 ./taxophages/viz/nextstrain.R \
-  $CSV $REDUCED_MATRIX $METADATA $NEWICK_TREE $DIMENSIONS $FILTER_UNKNOWNS
+  $CSV $REDUCED_MATRIX $METADATA $NEWICK_TREE $DISTANCE_MATRIX $DIMENSIONS $FILTER_UNKNOWNS
 ```
 
 ## Visualize it in nextstrain
@@ -39,6 +40,7 @@ METADATA=${DATASET_DIR}/metadata.${DATASET_ID}.tsv
 
 LAT_LONGS=${DATASET_DIR}/lat_longs.tsv
 AUSPICE_CONFIG=${DATASET_DIR}/auspice_config.json
+COLOR_DATA=${DATASET_DIR}/colors.tsv
 
 EXPORTED_JSON=${DATASET_DIR}/covid.json
 ```
@@ -47,6 +49,7 @@ Generate the files needed by nexstrain from the newick tree.
 
 ```bash
 augur refine \
+  --keep-root \
   --tree $INPUT_TREE \
   --metadata $METADATA \
   --output-node-data $NODE_DATA \
@@ -55,10 +58,12 @@ augur refine \
 
 Generate the JSON file needed by nextstrain.
 ```bash
+AUGUR_RECURSION_LIMIT=30000 \
 augur export v2 \
   --tree $REFINED_TREE \
   --metadata $METADATA \
   --node-data $NODE_DATA \
+  --colors $COLOR_DATA \
   --color-by-metadata region country location date \
   --lat-longs $LAT_LONGS \
   --geo-resolutions country \
