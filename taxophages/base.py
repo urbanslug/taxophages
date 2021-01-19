@@ -12,6 +12,40 @@ from .utils import isolate_field
 
 from Bio import SeqIO
 
+from functools import reduce
+
+def select_sequences(fasta, txt_path, filtered_fasta_path):
+    """
+    """
+    sequences = list(SeqIO.parse(open(fasta),'fasta'))
+    filter_sequences = read_txt(txt_path)
+    filter_sequences = [x.strip() for x in filter_sequences]
+
+    selected = []
+
+    with click.progressbar(sequences, 
+    label='Selecting sequences') as seqs:
+        for sequence in seqs:
+            foo = '>'+sequence.id
+            if foo in filter_sequences:
+                selected.append('>'+sequence.id)
+                selected.append(str(sequence.seq))
+    
+    click.echo("Writing to %s" % filtered_fasta_path)
+    write_txt(selected, filtered_fasta_path, True)
+
+def generate_set_of_random_values(start, end, size):
+    """
+    Generate unique random integers
+    """
+    random_integers = set()
+
+    while (len(random_integers) < size):
+        random_int = randint(start, end)
+        random_integers.add(random_int)
+
+    return random_integers
+
 def sample_sequences(size, fasta, sampled_fasta):
     """
     """
@@ -21,17 +55,16 @@ def sample_sequences(size, fasta, sampled_fasta):
     if size > len(sequences):
         raise Exception("Sample size larger than number of sequences")
 
-    random_indexes = []
-    for _ in range(size):
-        random_index = randint(1, sequence_count)
-        random_indexes.append(random_index)
+    click.echo("Generating random values")
+    random_indexes = generate_set_of_random_values(0, sequence_count-1, size)
 
+    click.echo("Selecting sequences")
     sampled = []
-
-    for i in random_indexes:
-        fasta = sequences[i]
-        sampled.append('>'+fasta.id)
-        sampled.append(str(fasta.seq))
+    with click.progressbar(random_indexes) as rands:
+        for i in rands:
+            fasta = sequences[i]
+            sampled.append('>'+fasta.id)
+            sampled.append(str(fasta.seq))
 
     write_txt(sampled, sampled_fasta, True)
 
@@ -60,14 +93,24 @@ def prep_q(fasta, output_fasta):
     entry = ['>'+seq_id, str(sequence.seq)]
     write_txt(entry, output_fasta, True)
 
-def isolate_fields(input_csv, field_name, txt_path):
+def isolate_fields(input_csv, fields_to_extract, extracted_tsv_path, keep_headers):
     rows = read_document(input_csv)
 
     field_names = rows[0]
     data = rows[1:]
 
-    field = isolate_field(field_names, data, field_name)
-    write_txt(field, txt_path, insert_newlines=True)
+    extracted = []
+    for field_to_extract in fields_to_extract:
+        foo = isolate_field(field_names, data, field_to_extract)
+        extracted.append(foo)
+
+    zipped_data = zip(*extracted)
+    tabbed_data = ['\t'.join(x) for x in zipped_data]
+    
+    result = ['\t'.join(fields_to_extract)] + tabbed_data if keep_headers else tabbed_data
+    
+    click.echo("Writing extracted fields to %s" % extracted_tsv_path)
+    write_txt(result, extracted_tsv_path, insert_newlines=True)
 
 # Loop through sequences files in a fasta file and count the distribution of bases
 def base_count(fasta_path, csv_path):
