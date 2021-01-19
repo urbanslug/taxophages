@@ -146,12 +146,12 @@ def get_metadata(sequence_identifiers):
     return entries
 
 
-def get_and_prepend_metadata(input_csv, csv_with_metadata):
+def get_and_prepend_metadata(input_csv, csv_with_metadata, path_name):
     """
     Given a CSV look into the field name path.name and fetch the
     metadata for that file
     """
-    field_of_interest = "path.name"
+    field_of_interest = path_name
 
     click.echo("Reading %s" % input_csv)
     rows = read_document(input_csv)

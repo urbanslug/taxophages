@@ -112,13 +112,15 @@ strain <- sapply(metadata.df$sample, extract_short_hash, USE.NAMES = F)
 
 country <- metadata.df$country
 location <- metadata.df$location
+date <- metadata.df$date
 
 for (row in 1:length(country)) {
   country <- gsub("People's Republic of China", "China", country, fixed=T)
   location <- gsub("People's Republic of China", "China", location, fixed=T)
+  date <- gsub("1970-01-01", "unknown", date, fixed=T)
 }
 
-id.df <- data.frame(country, location, strain, metadata.df$date)
+id.df <- data.frame(country, location, strain, date)
 
 # join these into a single string separated by a slash
 id.list <- pmap(id.df, paste, sep="/")

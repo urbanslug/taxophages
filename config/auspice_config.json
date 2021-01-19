@@ -1,9 +1,9 @@
 {
-  "title":"COViD Tree",
+  "title":"COVID-19 PubSeq: Public SARS-CoV-2 Sequence Resource",
   "maintainers":[
     {
-      "name":"Njagi Mwaniki",
-      "url":"https://github.com/urbanslug"
+      "name":"COVID-19 PubSeq Team",
+      "url":"http://covid19.genenetwork.org/"
     }
   ],
   "build_url":"https://github.com/urbanslug/taxophages",
