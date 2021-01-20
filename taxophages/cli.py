@@ -199,7 +199,9 @@ def fun(count, name):
 @cli.command()
 @click.argument('fasta')
 @click.argument('distance_matrix')
-@click.argument('newick_tree')
-def mash_distance(fasta, distance_matrix, newick_tree):
+@click.argument('output_path')
+@click.option('-x', '--width', default=20, help='number of repeats')
+@click.option('-y', '--height', default=35, help='number of repeats')
+def mash_distance(fasta, distance_matrix, output_path, width, height):
     """Requires mash, calculate pairwise distances"""
-    do_mash(fasta, distance_matrix, newick_tree)
+    do_mash(fasta, distance_matrix, output_path, width, height)

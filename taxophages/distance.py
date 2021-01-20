@@ -14,8 +14,7 @@ def mash_dist_to_matrix(distances, sequence_count):
 
     return distance_matrix
 
-def do_mash(fasta, distance_matrix_path, newick_tree_path):
-
+def do_mash(fasta, distance_matrix_path, output_path, width, height):
     reference_path = "/tmp/chickenfoot"
     distances_path = "/tmp/distances"
     metadata_path = "/tmp/metadata"
@@ -49,8 +48,9 @@ def do_mash(fasta, distance_matrix_path, newick_tree_path):
     click.echo("Writing distance matrix")
     write_txt(tabbed_matrix, distance_matrix_path, insert_newlines=True)
 
+    click.echo("Generating tree")
     subprocess.call (
-        f"./taxophages/viz/distance_matrix_to_tree.R {distance_matrix_path} {metadata_path} {newick_tree_path}",
+        f"./taxophages/viz/distance_matrix_to_tree.R {distance_matrix_path} {metadata_path} {output_path}.nwk {output_path}.pdf {width} {height}",
         shell=True
     )
 
