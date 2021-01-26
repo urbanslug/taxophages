@@ -21,9 +21,9 @@ from .utils import isolate_field
 countries = []
 unknown = "unknown"
 
-def query_arvados(id):
+def query_arvados(identifier):
     samples_endpoint_url = "http://collections.lugli.arvadosapi.com/c={}/metadata.yaml"
-    r = requests.get(samples_endpoint_url.format(id))
+    r = requests.get(samples_endpoint_url.format(identifier))
 
     if r.status_code != 200:
         return None
@@ -117,31 +117,31 @@ def get_metadata(sequence_identifiers):
     Get metadata associated with a given sequence identifier
     """
     global countries
-    
+
     working_dir = os.path.dirname(os.path.realpath(__file__))
     countries_csv_path = os.path.join(working_dir, "countries.csv")
     countries = read_document(countries_csv_path)
 
     # entries is a lists of lists containing sample, date, country, region
     entries = []
+    with click.progressbar(sequence_identifiers, label='Fetching metadata') as seqs:
+        for sequence_identifier in seqs:
+            unknown = "unknown"
+            metadata = query_arvados(sequence_identifier)
 
-    for sequence_identifier in sequence_identifiers:
-        unknown = "unknown"
-        metadata = query_arvados(sequence_identifier)
+            if metadata == None:
+                #entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
+                entries.append([sequence_identifier, unknown, unknown, unknown, unknown])
+                continue
 
-        if metadata == None:
-            #entries.append({'sample': sequence_hash, 'date': unknown, 'country': unknown})
-            entries.append([sequence_identifier, unknown, unknown, unknown, unknown])
-            continue
+            location, date = [metadata[item] for item in ('location', 'date')]
+            geo = get_country(location)
 
-        location, date = [metadata[item] for item in ('location', 'date')]
-        geo = get_country(location)
-
-        if geo == None:
-            entries.append([sequence_identifier, date, unknown, unknown, unknown])
-        else:
-            country, region, loc = [geo[item] for item in ('country', 'region', 'location')]
-            entries.append([sequence_identifier, date, loc, country, region])
+            if geo == None:
+                entries.append([sequence_identifier, date, unknown, unknown, unknown])
+            else:
+                country, region, loc = [geo[item] for item in ('country', 'region', 'location')]
+                entries.append([sequence_identifier, date, loc, country, region])
 
     return entries
 
@@ -165,10 +165,14 @@ def get_and_prepend_metadata(input_csv, csv_with_metadata, path_name):
     sequence_identifiers = []
     pattern =  r"lugli[a-z0-9-]*"
     for permalink in permalinks:
-        substring = re.search(pattern, permalink).group()
+        try:
+            substring = re.search(pattern, permalink).group()
+        except AttributeError:
+            substring = "lugli-4zz18-" + permalink
+
         sequence_identifiers.append(substring.strip())
 
-    click.echo("Fetching metadata.")
+    # Fetching metadata
     entries = get_metadata(sequence_identifiers)
 
     click.echo("Prepending metadata")

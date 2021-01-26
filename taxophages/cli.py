@@ -2,7 +2,7 @@ import click
 
 from .base import filter_threshold, base_count, \
     filter_matrix, sample_matrix, sample_sequences, prep_q, split_fasta, isolate_fields, \
-    taxo_all, taxo_cladogram, taxo_rsvd, select_sequences
+    taxo_all, taxo_cladogram, taxo_rsvd, select_sequences, call_R_newick
 
 from .metadata import get_and_prepend_metadata
 from .search import search as naive_search
@@ -151,7 +151,7 @@ def cladogram(csv, pdf):
 @click.argument('csv')
 @click.argument('reduced_csv')
 @click.argument('pdf')
-@click.option('-f', '--filter-unknown', default=True, help='Filter fields that are unknown')
+@click.option('-f', '--filter-unknown', default=True, help='Filter fields that are unknown. Default True')
 @click.option('-l', '--layout', default="rectangular", help='tree layout')
 @click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
 def clado_rsvd(csv, filter_unknown, reduced_csv, dimensions, layout, pdf):
@@ -163,6 +163,21 @@ def clado_rsvd(csv, filter_unknown, reduced_csv, dimensions, layout, pdf):
     dimensions = int(dimensions)
     taxo_all(csv, reduced_csv, dimensions, pdf,  layout, filter_unknown)
     click.echo("Done")
+
+@cli.command()
+@click.argument('tsv')
+@click.argument('metadata')
+@click.option('-d', '--dimensions', default=100, help='Number of dimensions to reduce to in SVD. Default 100.')
+@click.argument('newick_tree')
+def gen_newick(tsv, metadata, newick_tree, dimensions):
+    """
+    Generate a tree in newick format
+    """
+    click.echo("Generate newick tree ")
+    dimensions = int(dimensions)
+    call_R_newick(tsv, metadata, newick_tree, dimensions)
+    click.echo("Done")
+
 
 @cli.command()
 @click.argument('tsv')
@@ -200,7 +215,7 @@ def fun(count, name):
 @click.argument('fasta')
 @click.argument('distance_matrix')
 @click.argument('output_path')
-@click.option('-x', '--width', default=20, help='number of repeats')
+@click.option('-x', '--width', default=40, help='number of repeats')
 @click.option('-y', '--height', default=35, help='number of repeats')
 def mash_distance(fasta, distance_matrix, output_path, width, height):
     """Requires mash, calculate pairwise distances"""

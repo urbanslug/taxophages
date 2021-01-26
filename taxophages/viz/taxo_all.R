@@ -85,7 +85,8 @@ if (layout == "rectangular") {
   # country, location and date as id
   id.fields <- data.frame(data.df$country, 
                           data.df$location, 
-                          data.df$date)
+                          data.df$date,
+                          data.df$sample)
   # join these into a single string
   id <- unlist(pmap(id.fields, paste, sep=" / "))
   metadata.df <- cbind(id=id, data.df[, 1:8])
@@ -141,6 +142,16 @@ figure.sans_ext <- tools::file_path_sans_ext(figure.absolute)
 figure.dir <- dirname(figure.sans_ext)
 figure.basename <- basename(figure.sans_ext)
 
+#PDF
+pdf_figure <- paste(figure.basename, "pdf", sep=".")
+pdf_figure.path <- file.path(figure.dir, pdf_figure)
+message(sprintf("Saving rSVD tree to %s", pdf_figure.path))
+ggsave(pdf_figure.path,
+       units="cm",
+       height=35,
+       width=40,
+       limitsize=FALSE)
+
 
 # SVG
 svg_figure <- paste(figure.basename, "svg", sep=".")
@@ -151,7 +162,6 @@ ggsave(svg_figure.path,
        height=figure.height,
        width=figure.width,
        limitsize=FALSE)
-
 dev.off()
 
 message(sprintf("Converting tip labels to links for %s", svg_figure.path))

@@ -226,3 +226,14 @@ def taxo_all(csv, reduced_csv, dimensions, pdf, layout, filter_unknown):
         f"{taxo_all_script} {csv} {reduced_csv} {pdf} {dimensions} {layout} {filter_unknown}",
         shell=True
     )
+
+def call_R_newick(tsv, metadata, newick_tree, dimensions):
+    click.echo("Calling newick.R")
+
+    working_dir = os.path.dirname(os.path.realpath(__file__))
+    newick_script = os.path.join(working_dir, "viz/newick.R")
+
+    subprocess.call (
+        f"{newick_script} {tsv} {newick_tree} {metadata} {dimensions}",
+        shell=True
+    )
