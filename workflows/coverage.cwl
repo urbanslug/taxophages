@@ -6,27 +6,28 @@ class: CommandLineTool
 baseCommand: odgi
 
 inputs:
-  paths:
+  odgi_paths:
     type: string
     inputBinding:
       position: 1
 
-  input_flag:
-    type: boolean
-    inputBinding:
-      position: 2
-      prefix: -i
-
-  graph:
+  odgi_graph:
     type: File
     inputBinding:
-        position: 3
+        position: 2
+        prefix: -i
 
-  input_x_flag:
+  haplotypes:
     type: boolean
     inputBinding:
       position: 4
       prefix: -H
+
+  threads:
+    type: int
+    inputBinding:
+        position: 5
+        prefix: -t
 
 outputs:
   coverage_matrix:

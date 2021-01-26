@@ -11,44 +11,39 @@ inputs:
         inputBinding:
             position: 1
 
-    clado-rsvd:
+    newick:
         type: string
         inputBinding:
             position: 2
 
-    rsvd_dimensions:
+    newick_dimensions:
         type: int
         inputBinding:
-            position: 5
+            position: 3
             prefix: -d
 
-    cladogram_matrix:
+    newick_coverage_matrix:
         type: File
         inputBinding:
             position: 3
-
-    reduced_matrix:
+    
+    newick_metadata:
         type: string
         inputBinding:
             position: 4
 
-    svg_figure:
+    newick_tree:
         type: string
         inputBinding:
             position: 5
 
 outputs:
-    reduced_matrix_out:
+    metadata_out:
         type: File
         outputBinding:
-            glob: '*.reduced.tsv'
+            glob: 'metadata.tsv'
 
-    svg_figure_out:
+    newick_tree_out:
         type: File
         outputBinding:
-            glob: '*.svg'
-
-    html_figure:
-        type: File
-        outputBinding:
-            glob: '*.html'
+            glob: '*.nwk'
